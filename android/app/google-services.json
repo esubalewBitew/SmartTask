@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "803393145214",
+    "project_id": "smarttask-9c578",
+    "storage_bucket": "smarttask-9c578.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:803393145214:android:4a3e88127f6444d41d0b2f",
+        "android_client_info": {
+          "package_name": "com.inkomoko.smarttask"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWJe1bJ3fz5jHhaELkmcmG8rrr1PWu7hw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
