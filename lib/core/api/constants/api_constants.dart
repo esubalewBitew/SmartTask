@@ -2,8 +2,8 @@ class ApiConstants {
   ApiConstants._();
 
   // Base URLs
-  static const String baseUrl = 'https://api-load-link.gafatrading.com/api';
-  static const String baseUrlDev = 'https://api-load-link.gafatrading.com/api';
+  static const String baseUrl = 'https://api-smart-task/api';
+  static const String baseUrlDev = 'https://api-smart-task/api';
   static const String baseUrlStaging =
       'https://api-load-link.gafatrading.com/api';
 
