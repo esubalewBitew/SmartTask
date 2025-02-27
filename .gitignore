@@ -83,3 +83,8 @@ captures/
 # External native build folder
 .externalNativeBuild
 .cxx/
+
+# Build files
+android/app/build/
+**/app-debug.apk
+**/kernel_blob.bin
