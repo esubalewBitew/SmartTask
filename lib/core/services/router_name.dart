@@ -11,6 +11,7 @@ class AppRouteName {
 
   // Main Routes
   static const String home = 'home';
+  static const String auth = 'auth';
   static const String tasks = 'tasks';
   static const String profile = 'profile';
   static const String calendar = 'calendar';
@@ -20,10 +21,14 @@ class AppRouteName {
   static const String createRole = 'create-role';
   static const String onBoardFirstPage = 'on-board-first-page';
   static const String mainPage = 'main-page';
+  static const String workspaceDetail = 'workspace-detail';
+  static const String twoFactorSetup = 'two-factor-setup';
+  static const String twoFactorVerify = 'two-factor-verify';
   static const String notifications = 'notifications';
   static const String sendUsd = 'send-usd';
   static const String recipientAccountNumber = 'recipient-account-number';
   static const String addAmount = 'add-amount';
+  static const String notificationPreferences = 'notification-preferences';
   static const String addAmountBankTransfer = 'add-amount-bank-tranfer';
   static const String confirmationSendUsd = 'confirmation-send-usd';
   static const String confirmationSendEtb = 'confirmation-send-etb';

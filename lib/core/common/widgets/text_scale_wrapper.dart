@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class TextScaleWrapper extends StatelessWidget {
-
   const TextScaleWrapper({
-    required this.child, super.key,
+    required this.child,
+    super.key,
   });
   final Widget child;
 

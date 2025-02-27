@@ -8,7 +8,7 @@ class CountryRes {
     {'name': 'Ethiopia', 'code': 'ET', 'dialCode': '+251'},
     {'name': 'United States', 'code': 'US', 'dialCode': '+1'},
     {'name': 'United Kingdom', 'code': 'GB', 'dialCode': '+44'},
-    
+
     // East Africa
     {'name': 'Kenya', 'code': 'KE', 'dialCode': '+254'},
     {'name': 'Tanzania', 'code': 'TZ', 'dialCode': '+255'},
@@ -19,7 +19,7 @@ class CountryRes {
     {'name': 'Djibouti', 'code': 'DJ', 'dialCode': '+253'},
     {'name': 'Somalia', 'code': 'SO', 'dialCode': '+252'},
     {'name': 'Eritrea', 'code': 'ER', 'dialCode': '+291'},
-    
+
     // Rest of Africa
     {'name': 'Nigeria', 'code': 'NG', 'dialCode': '+234'},
     {'name': 'South Africa', 'code': 'ZA', 'dialCode': '+27'},
@@ -36,7 +36,7 @@ class CountryRes {
     {'name': 'Cameroon', 'code': 'CM', 'dialCode': '+237'},
     {'name': 'Ivory Coast', 'code': 'CI', 'dialCode': '+225'},
     {'name': 'Senegal', 'code': 'SN', 'dialCode': '+221'},
-    
+
     // Middle East
     {'name': 'Saudi Arabia', 'code': 'SA', 'dialCode': '+966'},
     {'name': 'UAE', 'code': 'AE', 'dialCode': '+971'},
@@ -50,7 +50,7 @@ class CountryRes {
     {'name': 'Iraq', 'code': 'IQ', 'dialCode': '+964'},
     {'name': 'Jordan', 'code': 'JO', 'dialCode': '+962'},
     {'name': 'Lebanon', 'code': 'LB', 'dialCode': '+961'},
-    
+
     // Asia
     {'name': 'China', 'code': 'CN', 'dialCode': '+86'},
     {'name': 'India', 'code': 'IN', 'dialCode': '+91'},
@@ -66,7 +66,7 @@ class CountryRes {
     {'name': 'Singapore', 'code': 'SG', 'dialCode': '+65'},
     {'name': 'Taiwan', 'code': 'TW', 'dialCode': '+886'},
     {'name': 'Hong Kong', 'code': 'HK', 'dialCode': '+852'},
-    
+
     // Europe
     {'name': 'Germany', 'code': 'DE', 'dialCode': '+49'},
     {'name': 'France', 'code': 'FR', 'dialCode': '+33'},
@@ -86,7 +86,7 @@ class CountryRes {
     {'name': 'Poland', 'code': 'PL', 'dialCode': '+48'},
     {'name': 'Romania', 'code': 'RO', 'dialCode': '+40'},
     {'name': 'Russia', 'code': 'RU', 'dialCode': '+7'},
-    
+
     // Americas
     {'name': 'Canada', 'code': 'CA', 'dialCode': '+1'},
     {'name': 'Mexico', 'code': 'MX', 'dialCode': '+52'},
@@ -96,7 +96,7 @@ class CountryRes {
     {'name': 'Chile', 'code': 'CL', 'dialCode': '+56'},
     {'name': 'Peru', 'code': 'PE', 'dialCode': '+51'},
     {'name': 'Venezuela', 'code': 'VE', 'dialCode': '+58'},
-    
+
     // Oceania
     {'name': 'Australia', 'code': 'AU', 'dialCode': '+61'},
     {'name': 'New Zealand', 'code': 'NZ', 'dialCode': '+64'},
@@ -134,9 +134,9 @@ class CountryRes {
       final name = country['name']?.toLowerCase() ?? '';
       final code = country['code']?.toLowerCase() ?? '';
       final dialCode = country['dialCode']?.toLowerCase() ?? '';
-      return name.contains(lowercaseQuery) || 
-             code.contains(lowercaseQuery) || 
-             dialCode.contains(lowercaseQuery);
+      return name.contains(lowercaseQuery) ||
+          code.contains(lowercaseQuery) ||
+          dialCode.contains(lowercaseQuery);
     }).toList();
   }
 }

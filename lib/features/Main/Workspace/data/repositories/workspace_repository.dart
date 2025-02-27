@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/repositories/workspace_repository.dart';
-import '../models/workspace_model.dart';
 import '../../domain/entities/workspace_entity.dart';
 
 class WorkspaceRepositoryImpl implements WorkspaceRepository {
@@ -22,10 +21,11 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
     final querySnapshot = await _firestore
         .collection('workspaces')
         .where('memberIds', arrayContains: userId)
+        .where('isArchived', isEqualTo: false)
         .get();
 
     return querySnapshot.docs
-        .map((doc) => WorkspaceModel.fromJson({
+        .map((doc) => WorkspaceEntity.fromJson({
               'id': doc.id,
               ...doc.data(),
             }))
@@ -40,22 +40,57 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
 
-    final workspaceData = {
-      'name': name,
-      'description': description,
-      'ownerId': userId,
-      'memberIds': [userId],
-      'createdAt': DateTime.now().toIso8601String(),
-      'updatedAt': DateTime.now().toIso8601String(),
-    };
+    final workspace = WorkspaceEntity(
+      id: '',
+      name: name,
+      description: description,
+      ownerId: userId,
+      memberIds: [userId],
+      createdAt: DateTime.now(),
+      activeUsers: {},
+    );
 
-    final docRef = await _firestore.collection('workspaces').add(workspaceData);
-    final doc = await docRef.get();
+    final docRef = await _firestore
+        .collection('workspaces')
+        .add(workspace.toJson()..remove('id'));
 
-    return WorkspaceModel.fromJson({
+    return workspace.copyWith(id: docRef.id);
+  }
+
+  @override
+  Future<void> updateWorkspace(WorkspaceEntity workspace) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('User not authenticated');
+
+    if (workspace.ownerId != userId) {
+      throw Exception('Only workspace owner can update the workspace');
+    }
+
+    await _firestore
+        .collection('workspaces')
+        .doc(workspace.id)
+        .update(workspace.toJson());
+  }
+
+  @override
+  Future<void> deleteWorkspace(String workspaceId) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('User not authenticated');
+
+    final doc =
+        await _firestore.collection('workspaces').doc(workspaceId).get();
+    if (!doc.exists) throw Exception('Workspace not found');
+
+    final workspace = WorkspaceEntity.fromJson({
       'id': doc.id,
       ...doc.data()!,
     });
+
+    if (workspace.ownerId != userId) {
+      throw Exception('Only workspace owner can delete the workspace');
+    }
+
+    await _firestore.collection('workspaces').doc(workspaceId).delete();
   }
 
   @override
@@ -76,7 +111,9 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
 
     final doc =
         await _firestore.collection('workspaces').doc(workspaceId).get();
-    final workspace = WorkspaceModel.fromJson({
+    if (!doc.exists) throw Exception('Workspace not found');
+
+    final workspace = WorkspaceEntity.fromJson({
       'id': doc.id,
       ...doc.data()!,
     });
@@ -92,45 +129,12 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
   }
 
   @override
-  Future<void> deleteWorkspace(String workspaceId) async {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('User not authenticated');
-
-    final doc =
-        await _firestore.collection('workspaces').doc(workspaceId).get();
-    final workspace = WorkspaceModel.fromJson({
-      'id': doc.id,
-      ...doc.data()!,
-    });
-
-    if (workspace.ownerId != userId) {
-      throw Exception('Only workspace owner can delete the workspace');
-    }
-
-    await _firestore.collection('workspaces').doc(workspaceId).delete();
-  }
-
-  @override
-  Future<void> updateWorkspace(WorkspaceEntity workspace) async {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('User not authenticated');
-
-    if (workspace.ownerId != userId) {
-      throw Exception('Only workspace owner can update the workspace');
-    }
-
-    await _firestore.collection('workspaces').doc(workspace.id).update({
-      'name': workspace.name,
-      'description': workspace.description,
-      'updatedAt': DateTime.now().toIso8601String(),
-    });
-  }
-
-  @override
   Future<List<String>> getWorkspaceMembers(String workspaceId) async {
     final doc =
         await _firestore.collection('workspaces').doc(workspaceId).get();
-    final workspace = WorkspaceModel.fromJson({
+    if (!doc.exists) throw Exception('Workspace not found');
+
+    final workspace = WorkspaceEntity.fromJson({
       'id': doc.id,
       ...doc.data()!,
     });
@@ -142,13 +146,11 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
 
-    // Check if the current user is the workspace owner
     final isOwner = await isWorkspaceOwner(workspaceId);
     if (!isOwner) {
       throw Exception('Only workspace owner can invite members');
     }
 
-    // Get the user ID from the email
     final userQuery = await _firestore
         .collection('users')
         .where('email', isEqualTo: email)
@@ -160,17 +162,6 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
     }
 
     final invitedUserId = userQuery.docs.first.id;
-
-    // Check if the user is already a member
-    final workspace =
-        await _firestore.collection('workspaces').doc(workspaceId).get();
-    final memberIds = List<String>.from(workspace.data()?['memberIds'] ?? []);
-
-    if (memberIds.contains(invitedUserId)) {
-      throw Exception('User is already a member of this workspace');
-    }
-
-    // Add the user to the workspace
     await _firestore.collection('workspaces').doc(workspaceId).update({
       'memberIds': FieldValue.arrayUnion([invitedUserId]),
       'updatedAt': DateTime.now().toIso8601String(),
@@ -182,26 +173,24 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
 
-    // Check if the current user is the workspace owner
     final isOwner = await isWorkspaceOwner(workspaceId);
     if (!isOwner) {
       throw Exception('Only workspace owner can remove members');
     }
 
-    // Get the workspace
     final doc =
         await _firestore.collection('workspaces').doc(workspaceId).get();
-    final workspace = WorkspaceModel.fromJson({
+    if (!doc.exists) throw Exception('Workspace not found');
+
+    final workspace = WorkspaceEntity.fromJson({
       'id': doc.id,
       ...doc.data()!,
     });
 
-    // Cannot remove the owner
     if (memberId == workspace.ownerId) {
       throw Exception('Cannot remove the workspace owner');
     }
 
-    // Remove the member
     await _firestore.collection('workspaces').doc(workspaceId).update({
       'memberIds': FieldValue.arrayRemove([memberId]),
       'updatedAt': DateTime.now().toIso8601String(),
@@ -215,6 +204,8 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
 
     final doc =
         await _firestore.collection('workspaces').doc(workspaceId).get();
+    if (!doc.exists) throw Exception('Workspace not found');
+
     return doc.data()?['ownerId'] == userId;
   }
 
@@ -225,14 +216,10 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
 
     final doc =
         await _firestore.collection('workspaces').doc(workspaceId).get();
+    if (!doc.exists) throw Exception('Workspace not found');
+
     final memberIds = List<String>.from(doc.data()?['memberIds'] ?? []);
     return memberIds.contains(userId);
-  }
-
-  @override
-  Stream<Map<String, dynamic>> getActiveUsers(String workspaceId) {
-    return _firestore.collection('workspaces').doc(workspaceId).snapshots().map(
-        (doc) => (doc.data()?['activeUsers'] as Map<String, dynamic>?) ?? {});
   }
 
   @override
@@ -256,5 +243,11 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
         'activeUsers.$userId': FieldValue.delete(),
       });
     }
+  }
+
+  @override
+  Stream<Map<String, dynamic>> getActiveUsers(String workspaceId) {
+    return _firestore.collection('workspaces').doc(workspaceId).snapshots().map(
+        (doc) => (doc.data()?['activeUsers'] as Map<String, dynamic>?) ?? {});
   }
 }

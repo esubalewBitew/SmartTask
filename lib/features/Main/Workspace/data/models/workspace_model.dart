@@ -39,7 +39,7 @@ class WorkspaceModel extends WorkspaceEntity {
       'ownerId': ownerId,
       'memberIds': memberIds,
       'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
     };
   }
 
@@ -51,6 +51,8 @@ class WorkspaceModel extends WorkspaceEntity {
     List<String>? memberIds,
     DateTime? createdAt,
     DateTime? updatedAt,
+    Map<String, dynamic>? activeUsers,
+    bool? isArchived,
   }) {
     return WorkspaceModel(
       id: id ?? this.id,
@@ -59,7 +61,7 @@ class WorkspaceModel extends WorkspaceEntity {
       ownerId: ownerId ?? this.ownerId,
       memberIds: memberIds ?? this.memberIds,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      updatedAt: updatedAt ?? this.updatedAt!,
     );
   }
 }

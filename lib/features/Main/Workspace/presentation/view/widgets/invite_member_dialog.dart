@@ -27,10 +27,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
   void _handleSubmit() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<WorkspaceBloc>().add(
-            InviteMember(
-              workspaceId: widget.workspaceId,
-              email: _emailController.text.trim(),
-            ),
+            AddMember(widget.workspaceId, _emailController.text.trim()),
           );
       Navigator.pop(context);
     }

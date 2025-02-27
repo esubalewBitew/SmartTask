@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:smarttask/core/di/injection_container.dart';
+import 'package:smarttask/core/services/notification_service.dart';
 import 'package:smarttask/core/services/router_name.dart';
 import 'package:smarttask/features/Main/Tasks/domain/entities/task_entity.dart';
 import 'package:smarttask/features/Main/Tasks/presentation/bloc/task_bloc.dart';
@@ -10,6 +11,8 @@ import 'widgets/add_task_bottom_sheet.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:collection/collection.dart';
+import 'dart:math' show max;
 
 class TasksPage extends StatelessWidget {
   const TasksPage({Key? key}) : super(key: key);
@@ -44,6 +47,11 @@ class _TasksViewState extends State<_TasksView> {
   List<TaskEntity> _filteredTasks = [];
   String? _errorMessage;
   DateTime _selectedDate = DateTime.now();
+
+  // Add new filter states
+  String _selectedFilter = 'all'; // all, name, date, priority, tags
+  List<String> _selectedTags = [];
+  String _selectedPriority = 'all';
 
   @override
   void initState() {
@@ -92,25 +100,123 @@ class _TasksViewState extends State<_TasksView> {
     super.dispose();
   }
 
+  // Add fuzzy search score calculation
+  int _calculateFuzzyScore(String source, String target) {
+    source = source.toLowerCase();
+    target = target.toLowerCase();
+
+    if (source == target) return 100;
+    if (source.contains(target)) return 80;
+    if (target.contains(source)) return 60;
+
+    int matchCount = 0;
+    int maxLength =
+        source.length > target.length ? source.length : target.length;
+
+    for (int i = 0; i < source.length && i < target.length; i++) {
+      if (source[i] == target[i]) matchCount++;
+    }
+
+    return ((matchCount / maxLength) * 50).round();
+  }
+
   void _filterTasks(String query) {
     if (!mounted) return;
 
     final state = context.read<TaskBloc>().state;
     if (state is TasksLoaded) {
       setState(() {
-        if (query.isEmpty) {
-          _filteredTasks = _filterTasksByDate(state.tasks, _selectedDate);
-        } else {
-          _filteredTasks = state.tasks.where((task) {
-            final searchLower = query.toLowerCase();
-            final titleMatch = task.title.toLowerCase().contains(searchLower);
-            final descriptionMatch =
-                task.description?.toLowerCase().contains(searchLower) ?? false;
-            final dateMatch =
-                task.dueDate?.toString().contains(searchLower) ?? false;
+        List<TaskEntity> tasks = state.tasks;
 
-            return titleMatch || descriptionMatch || dateMatch;
-          }).toList();
+        // First filter by date if not searching
+        if (!_isSearching) {
+          tasks = _filterTasksByDate(tasks, _selectedDate);
+        }
+
+        // Apply search filters
+        if (query.isNotEmpty) {
+          List<MapEntry<TaskEntity, int>> scoredTasks = [];
+
+          for (var task in tasks) {
+            int score = 0;
+
+            switch (_selectedFilter) {
+              case 'name':
+                score = _calculateFuzzyScore(task.title, query);
+                break;
+              case 'date':
+                final dateStr = _formatDateTime(task.dueDate!);
+                score = dateStr.toLowerCase().contains(query.toLowerCase())
+                    ? 100
+                    : 0;
+                break;
+              case 'priority':
+                score = task.priority
+                        .toString()
+                        .toLowerCase()
+                        .contains(query.toLowerCase())
+                    ? 100
+                    : 0;
+                break;
+              case 'tags':
+                score = task.tags?.any((tag) =>
+                            tag.toLowerCase().contains(query.toLowerCase())) ??
+                        false
+                    ? 100
+                    : 0;
+                break;
+              default: // 'all'
+                // Check title
+                score = max(score, _calculateFuzzyScore(task.title, query));
+                // Check description
+                if (task.description != null) {
+                  score = max(
+                      score, _calculateFuzzyScore(task.description!, query));
+                }
+                // Check date
+                final dateStr = _formatDateTime(task.dueDate!);
+                if (dateStr.toLowerCase().contains(query.toLowerCase())) {
+                  score = max(score, 80);
+                }
+                // Check priority
+                if (task.priority
+                    .toString()
+                    .toLowerCase()
+                    .contains(query.toLowerCase())) {
+                  score = max(score, 70);
+                }
+                // Check tags
+                if (task.tags?.any((tag) =>
+                        tag.toLowerCase().contains(query.toLowerCase())) ??
+                    false) {
+                  score = max(score, 60);
+                }
+            }
+
+            if (score > 0) {
+              scoredTasks.add(MapEntry(task, score));
+            }
+          }
+
+          // Sort by score descending
+          scoredTasks.sort((a, b) => b.value.compareTo(a.value));
+          _filteredTasks = scoredTasks.map((e) => e.key).toList();
+        } else {
+          _filteredTasks = tasks;
+        }
+
+        // Apply additional filters
+        if (_selectedPriority != 'all') {
+          _filteredTasks = _filteredTasks
+              .where((task) => task.priority.toString() == _selectedPriority)
+              .toList();
+        }
+
+        if (_selectedTags.isNotEmpty) {
+          _filteredTasks = _filteredTasks
+              .where((task) =>
+                  task.tags?.any((tag) => _selectedTags.contains(tag)) ?? false)
+              .toList();
         }
       });
     }
@@ -135,6 +241,10 @@ class _TasksViewState extends State<_TasksView> {
       body: CustomScrollView(
         slivers: [
           _buildAppBar(context),
+          if (_isSearching)
+            SliverToBoxAdapter(
+              child: _buildSearchBar(),
+            ),
           if (_isSearching)
             _buildSearchResults()
           else ...[
@@ -222,6 +332,90 @@ class _TasksViewState extends State<_TasksView> {
           color: Colors.grey[700],
         ),
       ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search tasks...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        _searchSubject.add('');
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onChanged: (value) => _searchSubject.add(value),
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip('All', 'all'),
+                _buildFilterChip('Name', 'name'),
+                _buildFilterChip('Priority', 'priority'),
+                if (_selectedFilter == 'priority') ...[
+                  const SizedBox(width: 8),
+                  _buildPriorityFilter(),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriorityFilter() {
+    return DropdownButton<String>(
+      value: _selectedPriority,
+      items: ['all', 'high', 'medium', 'low'].map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(
+            value.capitalize(),
+            style: GoogleFonts.poppins(),
+          ),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedPriority = newValue;
+            _filterTasks(_searchController.text);
+          });
+        }
+      },
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        label: Text(label),
+        selected: _selectedFilter == value,
+        onSelected: (bool selected) {
+          setState(() {
+            _selectedFilter = selected ? value : 'all';
+            _filterTasks(_searchController.text);
+          });
+        },
+      ),
     );
   }
 
@@ -574,7 +768,7 @@ class _TasksViewState extends State<_TasksView> {
         context.read<TaskBloc>().add(DeleteTask(task.id));
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 12, left: 8, right: 8),
         decoration: BoxDecoration(
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
@@ -742,6 +936,12 @@ class _TasksViewState extends State<_TasksView> {
   }
 
   void _showAddTaskBottomSheet(BuildContext context) {
+    // NotificationService().scheduleTaskReminder(
+    //   'task.id',
+    //   'Task Created',
+    //   'New task "task.title}" has been created',
+    //   DateTime.now().add(const Duration(seconds: 5)),
+    // );
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -752,5 +952,11 @@ class _TasksViewState extends State<_TasksView> {
 
   String _formatDateTime(DateTime date) {
     return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${this.substring(1)}";
   }
 }

@@ -5,14 +5,27 @@ import '../../domain/entities/workspace_entity.dart';
 import 'widgets/create_workspace_dialog.dart';
 import 'widgets/edit_workspace_dialog.dart';
 import 'workspace_detail_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class WorkspaceListScreen extends StatelessWidget {
+class WorkspaceListScreen extends StatefulWidget {
   const WorkspaceListScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    context.read<WorkspaceBloc>().add(LoadWorkspaces());
+  State<WorkspaceListScreen> createState() => _WorkspaceListScreenState();
+}
 
+class _WorkspaceListScreenState extends State<WorkspaceListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load workspaces when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<WorkspaceBloc>().add(LoadWorkspaces());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Workspaces'),
@@ -23,16 +36,24 @@ class WorkspaceListScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: BlocBuilder<WorkspaceBloc, WorkspaceState>(
+      body: BlocConsumer<WorkspaceBloc, WorkspaceState>(
+        listener: (context, state) {
+          if (state is WorkspaceError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
         builder: (context, state) {
+          print('Current WorkspaceState: $state'); // Debug print
           if (state is WorkspaceLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is WorkspaceError) {
             return Center(child: Text(state.message));
-          } else if (state is WorkspaceLoaded) {
+          } else if (state is WorkspacesLoaded) {
             return _buildWorkspaceList(context, state.workspaces);
           }
-          return const SizedBox.shrink();
+          return const Center(child: Text('No workspaces found'));
         },
       ),
     );
@@ -209,7 +230,10 @@ class WorkspaceListScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              bloc.add(LeaveWorkspace(workspace.id));
+              bloc.add(RemoveMember(
+                workspace.id,
+                FirebaseAuth.instance.currentUser!.uid,
+              ));
               Navigator.pop(context);
             },
             child: const Text('Leave'),

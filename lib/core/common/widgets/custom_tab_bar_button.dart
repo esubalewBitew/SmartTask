@@ -34,8 +34,7 @@ class _TabLabelBarRenderer extends RenderFlex {
     var child = firstChild;
     final xOffsets = <double>[];
     while (child != null) {
-      final childParentData =
-      child.parentData! as FlexParentData;
+      final childParentData = child.parentData! as FlexParentData;
       xOffsets.add(childParentData.offset.dx);
       assert(child.parentData == childParentData);
       child = childParentData.nextSibling;
@@ -58,12 +57,12 @@ class _TabLabelBar extends Flex {
     required super.children,
     required this.onPerformLayout,
   }) : super(
-    direction: Axis.horizontal,
-    mainAxisSize: MainAxisSize.max,
-    mainAxisAlignment: MainAxisAlignment.start,
-    crossAxisAlignment: CrossAxisAlignment.center,
-    verticalDirection: VerticalDirection.down,
-  );
+          direction: Axis.horizontal,
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          verticalDirection: VerticalDirection.down,
+        );
 
   final _LayoutCallback onPerformLayout;
 
@@ -159,8 +158,8 @@ class _TabBarScrollPosition extends ScrollPositionWithSingleContext {
     required super.oldPosition,
     required this.tabBar,
   }) : super(
-    initialPixels: null,
-  );
+          initialPixels: null,
+        );
 
   final _CustomButtonTabBarState tabBar;
 
@@ -208,8 +207,7 @@ class _TabBarScrollController extends ScrollController {
 }
 
 /// A Flutterflow Design widget that displays a horizontal row of tabs.
-class CustomButtonTabBar extends StatefulWidget
-    implements PreferredSizeWidget {
+class CustomButtonTabBar extends StatefulWidget implements PreferredSizeWidget {
   const CustomButtonTabBar({
     super.key,
     required this.tabs,
@@ -281,8 +279,7 @@ class CustomButtonTabBar extends StatefulWidget
   }
 
   @override
-  State<CustomButtonTabBar> createState() =>
-      _CustomButtonTabBarState();
+  State<CustomButtonTabBar> createState() => _CustomButtonTabBarState();
 }
 
 class _CustomButtonTabBarState extends State<CustomButtonTabBar>
@@ -299,7 +296,6 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
 
   final GlobalKey _tabsParentKey = GlobalKey();
 
-
   @override
   void initState() {
     super.initState();
@@ -314,12 +310,12 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
         }
       });
   }
+
   bool get _controllerIsValid => _controller?.animation != null;
 
   void _updateTabController() {
     final newController =
         widget.controller ?? DefaultTabController.maybeOf(context);
-
 
     if (newController == _controller) {
       return;
@@ -341,10 +337,10 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
     _indicatorPainter = !_controllerIsValid
         ? null
         : _IndicatorPainter(
-      controller: _controller!,
-      tabKeys: _tabKeys,
-      old: _indicatorPainter,
-    );
+            controller: _controller!,
+            tabKeys: _tabKeys,
+            old: _indicatorPainter,
+          );
   }
 
   @override
@@ -430,7 +426,7 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
 
   void _scrollToControllerValue() {
     final leadingPosition =
-    _currentIndex > 0 ? _tabCenteredScrollOffset(_currentIndex - 1) : null;
+        _currentIndex > 0 ? _tabCenteredScrollOffset(_currentIndex - 1) : null;
     final middlePosition = _tabCenteredScrollOffset(_currentIndex);
     final trailingPosition = _currentIndex < maxTabIndex
         ? _tabCenteredScrollOffset(_currentIndex + 1)
@@ -474,8 +470,7 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
         _scrollToCurrentIndex();
       }
     }
-    setState(() {
-    });
+    setState(() {});
   }
 
   void _triggerAnimation() {
@@ -511,14 +506,14 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
 
     final textStyle = TextStyle.lerp(
         (widget.unselectedLabelStyle ??
-            tabBarTheme.labelStyle ??
-            DefaultTextStyle.of(context).style)
+                tabBarTheme.labelStyle ??
+                DefaultTextStyle.of(context).style)
             .copyWith(
           color: widget.unselectedLabelColor,
         ),
         (widget.labelStyle ??
-            tabBarTheme.labelStyle ??
-            DefaultTextStyle.of(context).style)
+                tabBarTheme.labelStyle ??
+                DefaultTextStyle.of(context).style)
             .copyWith(
           color: widget.labelColor,
         ),
@@ -589,7 +584,7 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
     return Padding(
       key: _tabKeys[index],
       padding:
-      widget.useToggleButtonStyle ? EdgeInsets.zero : widget.buttonMargin,
+          widget.useToggleButtonStyle ? EdgeInsets.zero : widget.buttonMargin,
       child: TextButton(
         onPressed: () => _handleTap(index),
         style: ButtonStyle(
@@ -602,18 +597,16 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           shape: WidgetStateProperty.all(
             widget.useToggleButtonStyle
-                ? const RoundedRectangleBorder(
-
-            )
+                ? const RoundedRectangleBorder()
                 : RoundedRectangleBorder(
-              side: (widget.borderWidth == 0)
-                  ? BorderSide.none
-                  : BorderSide(
-                color: borderColor ?? Colors.transparent,
-                width: widget.borderWidth,
-              ),
-              borderRadius: BorderRadius.circular(widget.borderRadius),
-            ),
+                    side: (widget.borderWidth == 0)
+                        ? BorderSide.none
+                        : BorderSide(
+                            color: borderColor ?? Colors.transparent,
+                            width: widget.borderWidth,
+                          ),
+                    borderRadius: BorderRadius.circular(widget.borderRadius),
+                  ),
           ),
         ),
         child: Ink(
@@ -628,7 +621,6 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     if (_controller!.length == 0) {
@@ -639,8 +631,7 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
       );
     }
 
-    final wrappedTabs =
-    List<Widget>.generate(widget.tabs.length, (int index) {
+    final wrappedTabs = List<Widget>.generate(widget.tabs.length, (int index) {
       return _buildStyledTab(widget.tabs[index], index);
     });
 
@@ -665,14 +656,14 @@ class _CustomButtonTabBarState extends State<CustomButtonTabBar>
           tabBarTemp = Material(
             shape: widget.useToggleButtonStyle
                 ? RoundedRectangleBorder(
-              side: (widget.borderWidth == 0)
-                  ? BorderSide.none
-                  : BorderSide(
-                color: widget.borderColor ?? Colors.transparent,
-                width: widget.borderWidth,
-              ),
-              borderRadius: BorderRadius.circular(widget.borderRadius),
-            )
+                    side: (widget.borderWidth == 0)
+                        ? BorderSide.none
+                        : BorderSide(
+                            color: widget.borderColor ?? Colors.transparent,
+                            width: widget.borderWidth,
+                          ),
+                    borderRadius: BorderRadius.circular(widget.borderRadius),
+                  )
                 : null,
             elevation: widget.useToggleButtonStyle ? widget.elevation : 0,
             clipBehavior: Clip.antiAliasWithSaveLayer,

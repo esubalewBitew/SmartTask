@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ImagePrecacheService {
   static Future<void> precacheAppImages(BuildContext context) async {
     await Future.wait([
-       // Home screen images
+      // Home screen images
       precacheImage(
         AssetImage('assets/vectors/band_tranfer_birrAcc_4x_img.png'),
         context,

@@ -3,22 +3,15 @@
 // Common Imports
 
 import 'package:smarttask/core/common/pages/error_screen.dart' as common;
-import 'package:smarttask/core/common/presentation/pages/contact_list_page.dart';
 import 'package:smarttask/core/common/presentation/pages/main_page.dart';
-// Contact List
-import 'package:smarttask/core/enum/contact_type.dart';
-import 'package:smarttask/core/services/injection_container.dart';
+
 import 'package:smarttask/core/services/router_name.dart';
 
-// Transfer to wallet (USD)
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smarttask/features/Auth/presentation/views/forgot_screen.dart';
 import 'package:smarttask/features/Auth/presentation/views/login_screen.dart';
 import 'package:smarttask/features/Auth/presentation/views/registration_screen.dart';
-import 'package:smarttask/features/Main/Analytics/presentation/view/analytics_page.dart';
-import 'package:smarttask/features/Main/Calendar/index.dart' as main_calendar;
 import 'package:smarttask/core/services/auth_guard.dart';
 import 'package:smarttask/features/Auth/presentation/view/login_page.dart';
 import 'package:smarttask/features/Auth/presentation/view/register_page.dart';
@@ -32,9 +25,9 @@ import 'package:smarttask/features/Error/presentation/views/error_screen.dart';
 import 'package:smarttask/features/Main/Workspace/presentation/view/workspace_list_screen.dart';
 import 'package:smarttask/features/Main/Workspace/presentation/view/workspace_detail_screen.dart';
 import 'package:smarttask/features/Main/Workspace/domain/entities/workspace_entity.dart';
+import 'package:smarttask/features/Settings/presentation/views/notification_preferences_screen.dart';
 
 part 'route.main.dart';
-part 'route.name.dart';
 
 final goRouter = GoRouter(
   initialLocation: '/',
@@ -122,6 +115,13 @@ final goRouter = GoRouter(
               builder: (context, state) => WorkspaceDetailScreen(
                 workspace: state.extra as WorkspaceEntity,
               ),
+            ),
+            // Settings routes
+            GoRoute(
+              path: 'settings/notifications',
+              name: AppRouteName.notificationPreferences,
+              builder: (context, state) =>
+                  const NotificationPreferencesScreen(),
             ),
           ],
         ),

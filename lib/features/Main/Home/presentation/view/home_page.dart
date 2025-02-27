@@ -63,30 +63,33 @@ class HomePage extends StatelessWidget {
             backgroundImage: NetworkImage(photoUrl),
           ),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _getGreeting(),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.grey,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getGreeting(),
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
                 ),
-              ),
-              Text(
-                displayName,
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                Text(
+                  displayName,
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               GestureDetector(
-                onTap: () => context.push('/home/workspaces'),
+                onTap: () => context.go('/${AppRouteName.workspaces}'),
                 child: Container(
                   margin: const EdgeInsets.only(right: 15),
                   padding: const EdgeInsets.all(8),

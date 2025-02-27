@@ -28,32 +28,32 @@ class CustomIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    borderRadius: borderRadius,
-    color: Colors.transparent,
-    clipBehavior: Clip.antiAlias,
-    child: Ink(
-      width: buttonSize,
-      height: buttonSize,
-      decoration: BoxDecoration(
-        color: fillColor,
-        border: Border.all(
-          color: borderColor ?? Colors.transparent,
-          width: borderWidth ?? 0,
-        ),
         borderRadius: borderRadius,
-        boxShadow: boxShadow,
-        gradient: gradient,
-      ),
-      child: Column(
-        children: [
-          IconButton(
-            icon: icon,
-            onPressed: onPressed,
-            splashRadius: buttonSize,
+        color: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
+        child: Ink(
+          width: buttonSize,
+          height: buttonSize,
+          decoration: BoxDecoration(
+            color: fillColor,
+            border: Border.all(
+              color: borderColor ?? Colors.transparent,
+              width: borderWidth ?? 0,
+            ),
+            borderRadius: borderRadius,
+            boxShadow: boxShadow,
+            gradient: gradient,
           ),
-          if(trailing != null) trailing!,
-        ],
-      ),
-    ),
-  );
+          child: Column(
+            children: [
+              IconButton(
+                icon: icon,
+                onPressed: onPressed,
+                splashRadius: buttonSize,
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+        ),
+      );
 }

@@ -11,4 +11,4 @@ enum UserRole {
       orElse: () => UserRole.customer,
     );
   }
-} 
+}

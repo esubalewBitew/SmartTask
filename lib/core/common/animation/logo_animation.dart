@@ -4,7 +4,7 @@ import 'dart:math' as math;
 
 class CBRSLogoAnimation extends StatefulWidget {
   final double size;
-  
+
   const CBRSLogoAnimation({
     Key? key,
     this.size = 200.0,
@@ -14,7 +14,7 @@ class CBRSLogoAnimation extends StatefulWidget {
   State<CBRSLogoAnimation> createState() => _CBRSLogoAnimationState();
 }
 
-class _CBRSLogoAnimationState extends State<CBRSLogoAnimation> 
+class _CBRSLogoAnimationState extends State<CBRSLogoAnimation>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _arrowAnimation;
@@ -58,7 +58,8 @@ class _CBRSLogoAnimationState extends State<CBRSLogoAnimation>
 class CBRSLogoPainter extends CustomPainter {
   final Animation<double> arrowProgress;
 
-  CBRSLogoPainter({required this.arrowProgress}) : super(repaint: arrowProgress);
+  CBRSLogoPainter({required this.arrowProgress})
+      : super(repaint: arrowProgress);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -98,22 +99,23 @@ class CBRSLogoPainter extends CustomPainter {
     )..layout();
 
     globeIconPainter.paint(
-      canvas, 
+      canvas,
       Offset(size.width * 0.15, size.height * 0.35),
     );
 
     // Animated arrow
     final progress = arrowProgress.value;
     final arrowPath = Path();
-    
+
     // Create curved arrow path
     final startPoint = Offset(size.width * 0.2, size.height * 0.3);
     final endPoint = Offset(size.width * 0.85, size.height * 0.3);
     final controlPoint = Offset(size.width * 0.5, size.height * 0.1);
-    
-    final currentEndX = startPoint.dx + (endPoint.dx - startPoint.dx) * progress;
-    final currentEndY = startPoint.dy + 
-        (math.sin(progress * math.pi) * -size.height * 0.2);
+
+    final currentEndX =
+        startPoint.dx + (endPoint.dx - startPoint.dx) * progress;
+    final currentEndY =
+        startPoint.dy + (math.sin(progress * math.pi) * -size.height * 0.2);
 
     arrowPath.moveTo(startPoint.dx, startPoint.dy);
     arrowPath.quadraticBezierTo(

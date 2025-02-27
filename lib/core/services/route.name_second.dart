@@ -16,4 +16,5 @@ class AppRouteName {
   static const String notifications = 'notifications';
   static const String workspaces = 'workspaces';
   static const String workspaceDetail = 'workspace-detail';
+  static const String notificationPreferences = 'notification-preferences';
 }

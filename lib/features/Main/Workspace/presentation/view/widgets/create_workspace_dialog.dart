@@ -25,8 +25,8 @@ class _CreateWorkspaceDialogState extends State<CreateWorkspaceDialog> {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<WorkspaceBloc>().add(
             CreateWorkspace(
-              name: _nameController.text.trim(),
-              description: _descriptionController.text.trim(),
+              _nameController.text.trim(),
+              _descriptionController.text.trim(),
             ),
           );
       Navigator.pop(context);

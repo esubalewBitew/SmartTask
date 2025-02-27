@@ -6,13 +6,14 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class LanguageController extends GetxController {
   // Observable variable for the selected language
-  var selectedLanguage = 'en'.obs; 
+  var selectedLanguage = 'en'.obs;
 
   // Initialize the selected language from Hive
   @override
   void onInit() {
     var box = Hive.box('settingsBox');
-    selectedLanguage.value = box.get('languageCode', defaultValue: 'en') as String;
+    selectedLanguage.value =
+        box.get('languageCode', defaultValue: 'en') as String;
     super.onInit();
   }
 

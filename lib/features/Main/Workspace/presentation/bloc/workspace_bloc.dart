@@ -1,12 +1,11 @@
-import 'package:bloc/bloc.dart';
+import 'dart:async';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/workspace_entity.dart';
 import '../../domain/repositories/workspace_repository.dart';
+import '../../domain/entities/workspace_entity.dart';
 
 // Events
 abstract class WorkspaceEvent extends Equatable {
-  const WorkspaceEvent();
-
   @override
   List<Object?> get props => [];
 }
@@ -17,72 +16,55 @@ class CreateWorkspace extends WorkspaceEvent {
   final String name;
   final String description;
 
-  const CreateWorkspace({
-    required this.name,
-    required this.description,
-  });
+  CreateWorkspace(this.name, this.description);
 
   @override
   List<Object?> get props => [name, description];
 }
 
-class JoinWorkspace extends WorkspaceEvent {
-  final String workspaceId;
-
-  const JoinWorkspace(this.workspaceId);
-
-  @override
-  List<Object?> get props => [workspaceId];
-}
-
-class LeaveWorkspace extends WorkspaceEvent {
-  final String workspaceId;
-
-  const LeaveWorkspace(this.workspaceId);
-
-  @override
-  List<Object?> get props => [workspaceId];
-}
-
-class DeleteWorkspace extends WorkspaceEvent {
-  final String workspaceId;
-
-  const DeleteWorkspace(this.workspaceId);
-
-  @override
-  List<Object?> get props => [workspaceId];
-}
-
 class UpdateWorkspace extends WorkspaceEvent {
   final WorkspaceEntity workspace;
 
-  const UpdateWorkspace(this.workspace);
+  UpdateWorkspace(this.workspace);
 
   @override
   List<Object?> get props => [workspace];
 }
 
-class InviteMember extends WorkspaceEvent {
+class DeleteWorkspace extends WorkspaceEvent {
   final String workspaceId;
-  final String email;
 
-  const InviteMember({
-    required this.workspaceId,
-    required this.email,
-  });
+  DeleteWorkspace(this.workspaceId);
 
   @override
-  List<Object?> get props => [workspaceId, email];
+  List<Object?> get props => [workspaceId];
+}
+
+class UpdateUserActivity extends WorkspaceEvent {
+  final String workspaceId;
+  final String? taskId;
+
+  UpdateUserActivity(this.workspaceId, this.taskId);
+
+  @override
+  List<Object?> get props => [workspaceId, taskId];
+}
+
+class AddMember extends WorkspaceEvent {
+  final String workspaceId;
+  final String memberEmail;
+
+  AddMember(this.workspaceId, this.memberEmail);
+
+  @override
+  List<Object?> get props => [workspaceId, memberEmail];
 }
 
 class RemoveMember extends WorkspaceEvent {
   final String workspaceId;
   final String memberId;
 
-  const RemoveMember({
-    required this.workspaceId,
-    required this.memberId,
-  });
+  RemoveMember(this.workspaceId, this.memberId);
 
   @override
   List<Object?> get props => [workspaceId, memberId];
@@ -90,8 +72,6 @@ class RemoveMember extends WorkspaceEvent {
 
 // States
 abstract class WorkspaceState extends Equatable {
-  const WorkspaceState();
-
   @override
   List<Object?> get props => [];
 }
@@ -100,10 +80,10 @@ class WorkspaceInitial extends WorkspaceState {}
 
 class WorkspaceLoading extends WorkspaceState {}
 
-class WorkspaceLoaded extends WorkspaceState {
+class WorkspacesLoaded extends WorkspaceState {
   final List<WorkspaceEntity> workspaces;
 
-  const WorkspaceLoaded(this.workspaces);
+  WorkspacesLoaded(this.workspaces);
 
   @override
   List<Object?> get props => [workspaces];
@@ -112,7 +92,7 @@ class WorkspaceLoaded extends WorkspaceState {
 class WorkspaceError extends WorkspaceState {
   final String message;
 
-  const WorkspaceError(this.message);
+  WorkspaceError(this.message);
 
   @override
   List<Object?> get props => [message];
@@ -122,128 +102,108 @@ class WorkspaceError extends WorkspaceState {
 class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
   final WorkspaceRepository _repository;
 
-  WorkspaceBloc(this._repository) : super(WorkspaceInitial()) {
+  WorkspaceBloc({required WorkspaceRepository repository})
+      : _repository = repository,
+        super(WorkspaceInitial()) {
     on<LoadWorkspaces>(_onLoadWorkspaces);
     on<CreateWorkspace>(_onCreateWorkspace);
-    on<JoinWorkspace>(_onJoinWorkspace);
-    on<LeaveWorkspace>(_onLeaveWorkspace);
-    on<DeleteWorkspace>(_onDeleteWorkspace);
     on<UpdateWorkspace>(_onUpdateWorkspace);
-    on<InviteMember>(_onInviteMember);
+    on<DeleteWorkspace>(_onDeleteWorkspace);
+    on<UpdateUserActivity>(_onUpdateUserActivity);
+    on<AddMember>(_onAddMember);
     on<RemoveMember>(_onRemoveMember);
   }
 
-  Future<void> _onLoadWorkspaces(
-    LoadWorkspaces event,
-    Emitter<WorkspaceState> emit,
-  ) async {
+  // Expose repository as a getter
+  WorkspaceRepository get repository => _repository;
+
+  void _onLoadWorkspaces(
+      LoadWorkspaces event, Emitter<WorkspaceState> emit) async {
+    print('Loading workspaces...'); // Debug print
+    emit(WorkspaceLoading());
     try {
-      emit(WorkspaceLoading());
       final workspaces = await _repository.getWorkspaces();
-      emit(WorkspaceLoaded(workspaces));
-    } catch (e) {
-      emit(WorkspaceError(e.toString()));
+      print('Received workspaces: ${workspaces.length}'); // Debug print
+      emit(WorkspacesLoaded(workspaces));
+    } catch (error) {
+      print('Error loading workspaces: $error'); // Debug print
+      emit(WorkspaceError(error.toString()));
     }
   }
 
   Future<void> _onCreateWorkspace(
-    CreateWorkspace event,
-    Emitter<WorkspaceState> emit,
-  ) async {
+      CreateWorkspace event, Emitter<WorkspaceState> emit) async {
     try {
-      emit(WorkspaceLoading());
       await _repository.createWorkspace(
         name: event.name,
         description: event.description,
       );
       final workspaces = await _repository.getWorkspaces();
-      emit(WorkspaceLoaded(workspaces));
-    } catch (e) {
-      emit(WorkspaceError(e.toString()));
-    }
-  }
-
-  Future<void> _onJoinWorkspace(
-    JoinWorkspace event,
-    Emitter<WorkspaceState> emit,
-  ) async {
-    try {
-      emit(WorkspaceLoading());
-      await _repository.joinWorkspace(event.workspaceId);
-      final workspaces = await _repository.getWorkspaces();
-      emit(WorkspaceLoaded(workspaces));
-    } catch (e) {
-      emit(WorkspaceError(e.toString()));
-    }
-  }
-
-  Future<void> _onLeaveWorkspace(
-    LeaveWorkspace event,
-    Emitter<WorkspaceState> emit,
-  ) async {
-    try {
-      emit(WorkspaceLoading());
-      await _repository.leaveWorkspace(event.workspaceId);
-      final workspaces = await _repository.getWorkspaces();
-      emit(WorkspaceLoaded(workspaces));
-    } catch (e) {
-      emit(WorkspaceError(e.toString()));
-    }
-  }
-
-  Future<void> _onDeleteWorkspace(
-    DeleteWorkspace event,
-    Emitter<WorkspaceState> emit,
-  ) async {
-    try {
-      emit(WorkspaceLoading());
-      await _repository.deleteWorkspace(event.workspaceId);
-      final workspaces = await _repository.getWorkspaces();
-      emit(WorkspaceLoaded(workspaces));
+      emit(WorkspacesLoaded(workspaces));
     } catch (e) {
       emit(WorkspaceError(e.toString()));
     }
   }
 
   Future<void> _onUpdateWorkspace(
-    UpdateWorkspace event,
-    Emitter<WorkspaceState> emit,
-  ) async {
+      UpdateWorkspace event, Emitter<WorkspaceState> emit) async {
     try {
-      emit(WorkspaceLoading());
       await _repository.updateWorkspace(event.workspace);
       final workspaces = await _repository.getWorkspaces();
-      emit(WorkspaceLoaded(workspaces));
+      emit(WorkspacesLoaded(workspaces));
     } catch (e) {
       emit(WorkspaceError(e.toString()));
     }
   }
 
-  Future<void> _onInviteMember(
-    InviteMember event,
-    Emitter<WorkspaceState> emit,
-  ) async {
+  Future<void> _onDeleteWorkspace(
+      DeleteWorkspace event, Emitter<WorkspaceState> emit) async {
     try {
-      emit(WorkspaceLoading());
-      // TODO: Implement invite member functionality in repository
+      await _repository.deleteWorkspace(event.workspaceId);
       final workspaces = await _repository.getWorkspaces();
-      emit(WorkspaceLoaded(workspaces));
+      emit(WorkspacesLoaded(workspaces));
+    } catch (e) {
+      emit(WorkspaceError(e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateUserActivity(
+      UpdateUserActivity event, Emitter<WorkspaceState> emit) async {
+    try {
+      await _repository.updateUserActivity(
+        event.workspaceId,
+        event.taskId,
+        'editing', // Default action
+      );
+    } catch (e) {
+      emit(WorkspaceError(e.toString()));
+    }
+  }
+
+  Future<void> _onAddMember(
+      AddMember event, Emitter<WorkspaceState> emit) async {
+    try {
+      await _repository.inviteMember(event.workspaceId, event.memberEmail);
+      final workspaces = await _repository.getWorkspaces();
+      emit(WorkspacesLoaded(workspaces));
     } catch (e) {
       emit(WorkspaceError(e.toString()));
     }
   }
 
   Future<void> _onRemoveMember(
-    RemoveMember event,
-    Emitter<WorkspaceState> emit,
-  ) async {
+      RemoveMember event, Emitter<WorkspaceState> emit) async {
     try {
-      emit(WorkspaceLoading());
-      // TODO: Implement remove member functionality in repository
+      await _repository.removeMember(event.workspaceId, event.memberId);
       final workspaces = await _repository.getWorkspaces();
-      emit(WorkspaceLoaded(workspaces));
+      emit(WorkspacesLoaded(workspaces));
     } catch (e) {
       emit(WorkspaceError(e.toString()));
     }
+  }
+
+  @override
+  Future<void> close() async {
+    return super.close();
   }
 }

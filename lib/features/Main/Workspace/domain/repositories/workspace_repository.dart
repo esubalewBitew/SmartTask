@@ -15,4 +15,9 @@ abstract class WorkspaceRepository {
   Future<void> removeMember(String workspaceId, String memberId);
   Future<bool> isWorkspaceOwner(String workspaceId);
   Future<bool> isWorkspaceMember(String workspaceId);
+
+  // Activity tracking methods
+  Future<void> updateUserActivity(
+      String workspaceId, String? taskId, String action);
+  Stream<Map<String, dynamic>> getActiveUsers(String workspaceId);
 }

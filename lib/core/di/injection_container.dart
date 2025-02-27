@@ -101,7 +101,7 @@ Future<void> init() async {
   );
 
   // Features - Workspace
-  sl.registerFactory(() => WorkspaceBloc(sl()));
+  sl.registerFactory(() => WorkspaceBloc(repository: sl()));
   sl.registerLazySingleton<WorkspaceRepository>(
     () => WorkspaceRepositoryImpl(
       firestore: sl(),

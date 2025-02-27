@@ -8,6 +8,7 @@ import 'package:smarttask/features/Main/Home/presentation/view/home_page.dart';
 import 'package:smarttask/features/Main/Analytics/presentation/view/analytics_page.dart';
 import 'package:smarttask/features/Main/Profile/presentation/view/profile_page.dart';
 import 'package:smarttask/features/Main/Tasks/presentation/view/tasks_page.dart';
+import 'package:smarttask/features/Main/Workspace/presentation/view/workspace_list_screen.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -23,6 +24,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     HomePage(),
     TasksPage(),
+    WorkspaceListScreen(),
     AnalyticsPage(),
     ProfilePage(),
   ];

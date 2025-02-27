@@ -11,6 +11,8 @@ class TaskEntity extends Equatable {
   final String userId;
   final bool isSynced;
   final DateTime? lastSyncedAt;
+  final String priority;
+  final List<String> tags;
 
   const TaskEntity({
     required this.id,
@@ -23,6 +25,8 @@ class TaskEntity extends Equatable {
     required this.userId,
     this.isSynced = false,
     this.lastSyncedAt,
+    this.priority = 'medium',
+    this.tags = const [],
   });
 
   TaskEntity copyWith({
@@ -36,6 +40,8 @@ class TaskEntity extends Equatable {
     String? userId,
     bool? isSynced,
     DateTime? lastSyncedAt,
+    String? priority,
+    List<String>? tags,
   }) {
     return TaskEntity(
       id: id ?? this.id,
@@ -48,6 +54,8 @@ class TaskEntity extends Equatable {
       userId: userId ?? this.userId,
       isSynced: isSynced ?? this.isSynced,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      priority: priority ?? this.priority,
+      tags: tags ?? this.tags,
     );
   }
 
@@ -63,5 +71,7 @@ class TaskEntity extends Equatable {
         userId,
         isSynced,
         lastSyncedAt,
+        priority,
+        tags,
       ];
 }

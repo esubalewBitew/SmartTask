@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:smarttask/core/di/injection_container.dart' as di;
 import 'package:smarttask/core/services/route.dart';
 import 'package:smarttask/features/Main/Home/presentation/bloc/home_bloc.dart';
@@ -14,34 +15,43 @@ import 'package:smarttask/core/theme/theme_manager.dart';
 import 'package:smarttask/core/services/notification_service.dart';
 import 'firebase_options.dart';
 
-Future<void> main() async {
+// Handle background messages
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print('Handling a background message: ${message.messageId}');
+}
+
+void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize Firebase first
+    // Initialize Firebase
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // Configure reCAPTCHA
-    await FirebaseAuth.instance.setSettings(
-      appVerificationDisabledForTesting:
-          true, // Temporarily disable for testing
-      forceRecaptchaFlow: false,
-    );
+    // Set up background message handler
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     // Initialize notification service
-    await NotificationService().initialize();
+    print('Initializing notification service...');
+    final notificationService = NotificationService();
+    await notificationService.initialize().then((_) {
+      print('Notification service initialized successfully');
+    }).catchError((error) {
+      print('Error initializing notification service: $error');
+    });
 
-    // Initialize other dependencies
-    final prefs = await SharedPreferences.getInstance();
+    // Initialize dependency injection
     await di.init();
 
+    // Get SharedPreferences instance
+    final prefs = await SharedPreferences.getInstance();
+
     runApp(MyApp(prefs: prefs));
-  } catch (e, stackTrace) {
-    debugPrint('Error during initialization: $e');
-    debugPrint('Stack trace: $stackTrace');
-    // Show error UI instead of crashing
+  } catch (e) {
+    print('Error initializing app: $e');
     runApp(const ErrorApp());
   }
 }
@@ -67,7 +77,7 @@ class ErrorApp extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   // Retry initialization
-                  await main();
+                  //await main();
                 },
                 child: const Text('Retry'),
               ),

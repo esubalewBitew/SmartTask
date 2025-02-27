@@ -236,6 +236,16 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
 
     context.read<TaskBloc>().add(AddTask(task));
 
+    // Show immediate notification
+    NotificationService().showCustomNotification(
+      title: 'Task Created',
+      body: 'New task "${task.title}" has been created',
+      channelId: 'task_notifications',
+      channelName: 'Task Notifications',
+      channelDescription: 'Notifications for task management',
+    );
+    debugPrint('Task created notification shown');
+
     // Schedule notification if reminder is enabled
     if (_setReminder) {
       final reminderTime =

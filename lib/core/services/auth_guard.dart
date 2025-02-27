@@ -14,6 +14,11 @@ class AuthGuard {
     final isLoginRoute = state.matchedLocation.startsWith('/auth/');
     debugPrint('Is login route: $isLoginRoute');
 
+    // if (isAuth) {
+    //   debugPrint('Redirecting to main page');
+    //   return '/workspaces';
+    // }
+
     if (!isAuth && !isLoginRoute) {
       debugPrint('Redirecting to login');
       return '/auth/login';
@@ -21,7 +26,7 @@ class AuthGuard {
 
     if (isAuth && isLoginRoute) {
       debugPrint('Redirecting to main page');
-      return '/';
+      return '/${state.matchedLocation}';
     }
 
     debugPrint('No redirection needed');
